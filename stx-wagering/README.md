@@ -24,16 +24,26 @@ This smart contract implements a decentralized sports betting platform on the St
      - `event-end-block`: Block height when betting closes
      - `payout-mechanism`: Betting type
      - `option-odds`: Optional odds for fixed-odds betting
+   - Returns ERR_EMPTY_EVENT_DESCRIPTION if event details are empty
+   - Returns ERR_INSUFFICIENT_BETTING_OPTIONS if less than 2 options provided
+   - Returns ERR_INVALID_END_BLOCK if end block is not in future
+   - Returns ERR_UNSUPPORTED_BET_TYPE for invalid betting type
+   - Returns ERR_ODDS_REQUIRED if fixed-odds type without odds
 
 2. `close-event`
    - Closes betting for an event
    - Can only be called by event organizer or contract administrator
    - Requires event to have reached its end block height
+   - Returns ERR_NOT_AUTHORIZED if caller unauthorized
+   - Returns ERR_PREMATURE_CLOSURE if called before end block
 
 3. `resolve-event`
    - Declares winning options for an event
    - Can only be called by contract administrator
    - Supports up to 5 winning options
+   - Returns ERR_NO_WINNERS_DECLARED if no winners specified
+   - Returns ERR_TOO_MANY_WINNERS if more than 5 winners
+   - Returns ERR_WINNER_SELECTION_INVALID for invalid selections
 
 ### User Functions
 1. `place-bet`
@@ -42,16 +52,25 @@ This smart contract implements a decentralized sports betting platform on the St
      - `event-id`: Identifier of the event
      - `chosen-option`: Selected betting option
      - `bet-amount`: Amount of STX to bet
+   - Returns ERR_EVENT_NOT_FOUND if event doesn't exist
+   - Returns ERR_BETTING_CLOSED if event closed
+   - Returns ERR_INVALID_OPTION_SELECTION for invalid option
+   - Returns ERR_INVALID_BET_AMOUNT if amount is zero
 
 2. `claim-winnings`
    - Claims winnings for a successful bet
    - Automatically calculates payout based on betting mechanism
    - Transfers winnings to winner's address
+   - Returns ERR_NOT_A_WINNING_BET if bet didn't win
+   - Returns ERR_EVENT_NOT_FOUND if event doesn't exist
 
 3. `cancel-event`
    - Cancels an event and processes refunds
    - Can only be called by event organizer
    - Must be called before event end block
+   - Returns ERR_NOT_AUTHORIZED if not organizer
+   - Returns ERR_REFUND_FAILED if refund fails
+   - Returns ERR_REFUND_PROCESSING if refund already processing
 
 ### Read-Only Functions
 1. `get-event-details`
@@ -81,13 +100,16 @@ This smart contract implements a decentralized sports betting platform on the St
 - Payout calculated based on stake and predetermined odds
 
 ## Error Handling
-The contract includes comprehensive error handling for various scenarios:
-- Unauthorized access attempts
-- Invalid event operations
-- Insufficient balances
-- Timing violations
-- Invalid betting options
-- Failed transactions
+The contract includes comprehensive error handling with standardized SCREAMING_SNAKE_CASE error constants:
+- ERR_NOT_AUTHORIZED: Unauthorized access attempts
+- ERR_EVENT_NOT_FOUND: Event doesn't exist
+- ERR_BETTING_CLOSED: Event betting period ended
+- ERR_BALANCE_TOO_LOW: Insufficient funds
+- ERR_EVENT_ALREADY_RESOLVED: Cannot modify resolved event
+- ERR_INVALID_BET_AMOUNT: Invalid betting amount
+- ERR_EVENT_TIME_ELAPSED: Event time passed
+- ERR_WINNER_SELECTION_INVALID: Invalid winner selection
+- And other specific error conditions
 
 ## Security Features
 - Time-locked events prevent premature closures
